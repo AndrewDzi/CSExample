@@ -13,6 +13,9 @@ namespace CSExample.LitecartTests
         private IWebDriver driver;
         private WebDriverWait wait;
 
+        private string adminUrl = "http://localhost/litecart/admin/";
+        private string storeUrl = "http://localhost/litecart/en/";
+
         [SetUp]
         public void start()
         {
@@ -26,11 +29,11 @@ namespace CSExample.LitecartTests
             var login = "admin";
             var password = login;
 
-            driver.Url = "http://localhost/litecart/admin/";
+            driver.Url = adminUrl;
 
             IWebElement element = wait.Until(d => d.FindElement(GetElementLocatorByTypeAndName("input", "username")));
-            
-            driver.FindElement(GetElementLocatorByTypeAndName("input" ,"username")).SendKeys(login);
+
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "username")).SendKeys(login);
             driver.FindElement(GetElementLocatorByTypeAndName("input", "password")).SendKeys(password);
             driver.FindElement(GetElementLocatorByTypeAndName("button", "login")).Click();
 
@@ -47,7 +50,7 @@ namespace CSExample.LitecartTests
             LoginToLitecart();
 
             var numberOfItemsInMenu = GetElementById("sidebar").FindElements(menuItemPath).Count;
-            
+
             for (int i = 0; i < numberOfItemsInMenu; i++)
             {
                 var menuItem = driver.FindElements(menuItemPath).ElementAt(i);
@@ -67,6 +70,30 @@ namespace CSExample.LitecartTests
                         menuItem.FindElements(sumMenuItemPath).ElementAt(si).Click();
                         wait.Until(ExpectedConditions.ElementIsVisible(header));
                     }
+                }
+            }
+        }
+
+        [Test]
+        public void CheckThatEachProductOnHomePageHasOnlyOneSticker()
+        {
+            driver.Url = storeUrl;
+
+            var products = driver.FindElements(By.XPath("//li[@class='product column shadow hover-light']"));
+
+            foreach (var product in products)
+            {
+                var productName = product.FindElement(By.XPath(".//div[@class='name']")).Text;
+                var numberOfStickers = product.FindElements(By.XPath(".//div[contains(@class, 'sticker')]")).Count;
+
+                if (numberOfStickers == 0)
+                {
+                    throw new Exception($"{productName} has no Sticker!");
+                }
+
+                if (numberOfStickers > 1)
+                {
+                    throw new Exception($"{productName} has more than one sticker!");
                 }
             }
         }
