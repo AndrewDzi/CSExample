@@ -79,7 +79,7 @@ namespace CSExample.LitecartTests
         {
             driver.Url = storeUrl;
 
-            var products = driver.FindElements(By.XPath("//li[@class='product column shadow hover-light']"));
+            var products = driver.FindElements(By.XPath("//li[contains(@class, 'product column')]"));
 
             foreach (var product in products)
             {
