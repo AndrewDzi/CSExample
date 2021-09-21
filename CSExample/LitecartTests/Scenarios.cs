@@ -4,6 +4,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace CSExample.LitecartTests
 {
@@ -79,7 +80,7 @@ namespace CSExample.LitecartTests
         {
             driver.Url = storeUrl;
 
-            var products = driver.FindElements(By.XPath("//li[@class='product column shadow hover-light']"));
+            var products = driver.FindElements(By.XPath("//li[contains(@class, 'product column')]"));
 
             foreach (var product in products)
             {
@@ -95,6 +96,58 @@ namespace CSExample.LitecartTests
                 {
                     throw new Exception($"{productName} has more than one sticker!");
                 }
+            }
+        }
+
+        [Test]
+        public void CheckThatCountriesAreSortedInAlphabeticalOrder()
+        {     
+            LoginToLitecart();
+            driver.Url = $"{adminUrl}?app=countries&doc=countries";
+
+            var countriesRowPath = By.XPath("//form[@name='countries_form']//tr[@class='row']");
+            var countryNamePath = By.XPath(".//a");
+            var numberOfZonesPath = By.XPath(".//td[@style='text-align: right;']//preceding-sibling::td[1]");
+
+            // Country lists.
+            var nonSortedArrayOfCountries = driver.FindElements(countriesRowPath).Select(x => x.FindElement(countryNamePath).Text).ToArray();
+            var SortedArrayOfCountries = driver.FindElements(countriesRowPath).Select(x => x.FindElement(countryNamePath).Text).ToArray();
+
+            isArraysAreEqualySorted(nonSortedArrayOfCountries, SortedArrayOfCountries);
+
+            // Check if sublists are sorted.
+            var links = new List<string>();
+
+            foreach (var item in driver.FindElements(countriesRowPath).Select(x => x.FindElement(numberOfZonesPath)))
+            {
+                if (!item.Text.Equals("0"))
+                {
+                    links.Add(item.FindElement(By.XPath(".//preceding-sibling::td/a")).GetAttribute("href"));
+                }            
+            }
+
+            if (links.Count > 0)
+            {
+                foreach (var link in links)
+                {
+                    driver.Url = link;
+
+                    var listOfZonesPath = By.XPath("//table[@id='table-zones']//tr[not(@class='header')]//td[@style]/preceding-sibling::td[1]//input[@value and not(@data-size)]");
+                    var unsortedListOfZones = driver.FindElements(listOfZonesPath).Select(x => x.GetAttribute("value")).ToArray();
+                    var ListOfZonesToSort = driver.FindElements(listOfZonesPath).Select(x => x.GetAttribute("value")).ToArray();
+
+                    isArraysAreEqualySorted(ListOfZonesToSort, unsortedListOfZones);
+                }    
+            }
+        }
+
+        public void isArraysAreEqualySorted(string[] arrayToSort, string[] unsortedAray)
+        {
+            Array.Sort(arrayToSort);
+
+            if (!unsortedAray.SequenceEqual(arrayToSort))
+            {
+                throw new Exception("The List isn't sorted");
             }
         }
 
