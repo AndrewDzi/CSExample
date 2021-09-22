@@ -101,7 +101,7 @@ namespace CSExample.LitecartTests
 
         [Test]
         public void CheckThatCountriesAreSortedInAlphabeticalOrder()
-        {     
+        {
             LoginToLitecart();
             driver.Url = $"{adminUrl}?app=countries&doc=countries";
 
@@ -123,7 +123,7 @@ namespace CSExample.LitecartTests
                 if (!item.Text.Equals("0"))
                 {
                     links.Add(item.FindElement(By.XPath(".//preceding-sibling::td/a")).GetAttribute("href"));
-                }            
+                }
             }
 
             if (links.Count > 0)
@@ -137,7 +137,26 @@ namespace CSExample.LitecartTests
                     var ListOfZonesToSort = driver.FindElements(listOfZonesPath).Select(x => x.GetAttribute("value")).ToArray();
 
                     isArraysAreEqualySorted(ListOfZonesToSort, unsortedListOfZones);
-                }    
+                }
+            }
+        }
+
+        [Test]
+        public void CheckThatGeoZones()
+        {
+            LoginToLitecart();
+            driver.Url = $"{adminUrl}?app=geo_zones&doc=geo_zones";
+
+            var listOfCountris = driver.FindElements(By.XPath("//table//td[not(@style)]/a")).Select(x => x.GetAttribute("href")).ToList();
+
+            foreach (var country in listOfCountris)
+            {
+                driver.Url = country;
+
+                var listOfSelectedZonesToSort = driver.FindElements(By.XPath("//table[@id='table-zones']//td[@style]//preceding-sibling::td[1]//option[@selected='selected']")).Select(x => x.Text).ToArray();
+                var listOfSelectedZones = driver.FindElements(By.XPath("//table[@id='table-zones']//td[@style]//preceding-sibling::td[1]//option[@selected='selected']")).Select(x => x.Text).ToArray();
+
+                isArraysAreEqualySorted(listOfSelectedZonesToSort, listOfSelectedZones);
             }
         }
 
