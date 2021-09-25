@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using System.Linq;
 using System.Collections.Generic;
@@ -160,6 +161,95 @@ namespace CSExample.LitecartTests
             }
         }
 
+        [Test]
+        public void CheckThatProperProductPageOpensWhenClickOnProduct()
+        {
+            driver.Url = storeUrl;
+
+            var productName = "Yellow Duck";
+            var expectedRegularPriceFontTextDecoration = "line-through";
+            var expectedDiscountPriceColor = "0, 0";
+            var expectedDiscountPriceFontWeight = driver.GetType().Name.Equals("FirefoxDriver") ? "900" : "700";
+            var product = GetProductFromContext(GetProductsSection("Campaigns"), productName);
+            var actualProductRegularPrice = GetRegularProductPrice(product).Text;
+            var actualProductDiscountPrice = GetDiscountProductPrice(product).Text;
+
+            //  Check style
+            var expectedRegularPriceColor = "119, 119, 119";
+            if (!GetRegularProductPrice(product).GetCssValue("color").Contains(expectedRegularPriceColor))
+            {
+                throw new Exception("Color mismatch");
+            }
+
+            if (!GetRegularProductPrice(product).GetCssValue("text-decoration").Contains(expectedRegularPriceFontTextDecoration))
+            {
+                throw new Exception("Text decoration mismatch");
+            }
+
+            if (!GetDiscountProductPrice(product).GetCssValue("color").Contains(expectedDiscountPriceColor))
+            {
+                throw new Exception("Color mismatch");
+            }
+
+            if (!GetDiscountProductPrice(product).GetCssValue("font-weight").Contains(expectedDiscountPriceFontWeight))
+            {
+                throw new Exception("Font weight mismatch");
+            }
+
+            product.Click();
+
+            var productOnDetailsPage = GetProductOnDetailsPage(productName);
+            // Check price
+            if (!GetRegularProductPrice(productOnDetailsPage).Text.Equals(actualProductRegularPrice))
+            {
+                throw new Exception("Regular price mismatch");
+            }
+
+            if (!GetDiscountProductPrice(productOnDetailsPage).Text.Equals(actualProductDiscountPrice))
+            {
+                throw new Exception("Discount price mismatc");
+            }
+
+            //  Check style on details page
+            expectedRegularPriceColor = "102, 102, 102";
+            if (!GetRegularProductPrice(productOnDetailsPage).GetCssValue("color").Contains(expectedRegularPriceColor))
+            {
+                throw new Exception("Color mismatch");
+            }
+
+            if (!GetRegularProductPrice(productOnDetailsPage).GetCssValue("text-decoration").Contains(expectedRegularPriceFontTextDecoration))
+            {
+                throw new Exception("Text decoration mismatch");
+            }
+
+            if (!GetDiscountProductPrice(productOnDetailsPage).GetCssValue("color").Contains(expectedDiscountPriceColor))
+            {
+                throw new Exception("Color mismatch");
+            }
+
+            if (driver.GetType().Name.Equals("FirefoxDriver"))
+                expectedDiscountPriceFontWeight = "700";
+
+            if (!GetDiscountProductPrice(productOnDetailsPage).GetCssValue("font-weight").Contains(expectedDiscountPriceFontWeight))
+            {
+                throw new Exception("Font weight mismatch");
+            }
+        }
+
+        #region Product
+
+        public IWebElement GetProductsSection(string sectionName) => driver.FindElement(By.XPath($"//div[@class='box']//h3[text()='{sectionName}']/following-sibling::div"));
+        public IWebElement GetProductFromContext(IWebElement context, string productName) => context.FindElement(By.XPath($".//li[contains(@class, 'product')]//div[@class='name' and text()='{productName}']//ancestor::li[contains(@class, 'product')]"));
+        public IWebElement GetRegularProductPrice(IWebElement ProductContext) => ProductContext.FindElement(By.XPath(".//*[@class='regular-price']"));
+        public IWebElement GetDiscountProductPrice(IWebElement ProductContext) => ProductContext.FindElement(By.XPath(".//*[@class='campaign-price']"));
+
+        // Product details page
+        public IWebElement GetProductOnDetailsPage(string productName) => driver.FindElement(By.XPath($"//div[@id='box-product']//h1[text()='{productName}']//ancestor::div[@id='box-product']"));
+
+        #endregion
+
+        #region Helpers
+
         public void isArraysAreEqualySorted(string[] arrayToSort, string[] unsortedAray)
         {
             Array.Sort(arrayToSort);
@@ -185,6 +275,8 @@ namespace CSExample.LitecartTests
         {
             return By.XPath($".//{elementType}[@name='{buttonName}']");
         }
+
+        #endregion
 
         [TearDown]
         public void stop()
