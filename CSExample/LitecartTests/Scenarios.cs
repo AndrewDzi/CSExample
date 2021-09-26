@@ -236,6 +236,38 @@ namespace CSExample.LitecartTests
             }
         }
 
+        [Test]
+        public void RegisterNewUserInLitecard()
+        {
+            driver.Url = storeUrl;
+            var userEmail = $"user_{RandomString(10)}@gmail.com";
+            var userPhone = $"+120{RandomInt(9)}";
+            var password = RandomString(10);
+            var state = "Illinois";
+
+            GetLinkByName("New customers click here").Click();
+
+            new SelectElement(driver.FindElement(GetElementLocatorByTypeAndName("select", "country_code"))).SelectByText("United States");
+            wait.Until(d => d.FindElement(By.XPath($"//select[@name='zone_code']//option[text()='{state}']")));
+            new SelectElement(driver.FindElement(GetElementLocatorByTypeAndName("select", "zone_code"))).SelectByText(state);
+
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "firstname")).SendKeys("Bob");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "lastname")).SendKeys("Bobee");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "address1")).SendKeys("3322 S Morgan St");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "postcode")).SendKeys("60608");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "city")).SendKeys("Chicago");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "email")).SendKeys(userEmail);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "phone")).SendKeys(userPhone);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "password")).SendKeys(password);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "confirmed_password")).SendKeys(password);
+            driver.FindElement(GetElementLocatorByTypeAndName("button", "create_account")).Click();
+            GetLinkByName("Logout").Click();
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "email")).SendKeys(userEmail);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "password")).SendKeys(password);
+            driver.FindElement(GetElementLocatorByTypeAndName("button", "login")).Click();
+            GetLinkByName("Logout").Click();
+        }
+
         #region Product
 
         public IWebElement GetProductsSection(string sectionName) => driver.FindElement(By.XPath($"//div[@class='box']//h3[text()='{sectionName}']/following-sibling::div"));
@@ -265,6 +297,11 @@ namespace CSExample.LitecartTests
             return driver.FindElement(By.XPath($"//*[@id='{id}']"));
         }
 
+        public IWebElement GetLinkByName(string name)
+        {
+            return driver.FindElement(By.XPath($"//a[@href and text()='{name}']"));
+        }
+
         public By GetElementLocatorByXpath(string xpath)
         {
             return By.XPath(xpath);
@@ -274,6 +311,25 @@ namespace CSExample.LitecartTests
         public By GetElementLocatorByTypeAndName(string elementType, string buttonName)
         {
             return By.XPath($".//{elementType}[@name='{buttonName}']");
+        }
+
+
+        private static Random random = new Random();
+
+        public static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private static Random randomNumber = new Random();
+
+        public static string RandomInt(int length)
+        {
+            const string chars = "0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[randomNumber.Next(s.Length)]).ToArray());
         }
 
         #endregion
