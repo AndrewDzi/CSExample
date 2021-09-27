@@ -268,6 +268,58 @@ namespace CSExample.LitecartTests
             GetLinkByName("Logout").Click();
         }
 
+        [Test]
+        public void CheckThatItsPossibleToAddNewProductToCatalog()
+        {
+            driver.Url = adminUrl;
+            LoginToLitecart();
+
+            var productName = "Dust";
+            var absoluteFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location.Replace(@"bin\Debug\CSExample.dll", @"\Content\dust.png");
+
+            GetLitecartAdminMenuItem("Catalog").Click();
+            driver.FindElement(By.XPath("//*[@class='button' and  contains(text(),'Add New Product')]")).Click();
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "name[en]")).SendKeys(productName);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "code")).SendKeys("001");
+            GetCheckboxByName("Unisex").Click();
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "quantity")).Clear();
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "quantity")).SendKeys("1");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "new_images[]")).SendKeys(absoluteFilePath);
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "date_valid_from")).SendKeys("01/09/2021");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "date_valid_from")).SendKeys("01/09/2022");
+
+            GetLinkByName("Information").Click();
+
+            new SelectElement(driver.FindElement(GetElementLocatorByTypeAndName("select", "manufacturer_id"))).SelectByText("ACME Corp.");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "keywords")).SendKeys("dst");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "short_description[en]")).SendKeys("Exotic decoration");
+            driver.FindElement(GetElementLocatorByTypeAndName("textarea", "description[en]")).SendKeys("Dust is made of fine particles of solid matter. On Earth, it generally consists of particles in the atmosphere that come from various sources such as soil lifted by wind (an aeolian process), volcanic eruptions, and pollution. Dust in homes is composed of about 20–50% dead skin cells.");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "head_title[en]")).SendKeys("Dust like a real dust");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "meta_description[en]")).SendKeys("meta dust disc.");
+
+            GetLinkByName("Prices").Click();
+
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "purchase_price")).Clear();
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "purchase_price")).SendKeys("9.99");
+            new SelectElement(driver.FindElement(GetElementLocatorByTypeAndName("select", "purchase_price_currency_code"))).SelectByText("Euros");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "gross_prices[USD]")).SendKeys("1");
+            driver.FindElement(GetElementLocatorByTypeAndName("input", "gross_prices[EUR]")).SendKeys("1");
+            driver.FindElement(GetElementLocatorByTypeAndName("button", "save")).Click();
+
+            if (!driver.FindElement(GetElementLocatorByTypeAndName("form", "catalog_form")).FindElement(By.XPath($".//a[text()='{productName}']")).Displayed)
+            {
+                throw new Exception($"Product '{productName}' wasn't created.");
+            }
+        }
+
+        #region Litecart Admin
+
+        public IWebElement GetLitecartAdminMenuItem(string menuItemName) => driver.FindElement(By.XPath($"//ul[@id='box-apps-menu']//*[@id='app-']//span[@class='name' and text()='{menuItemName}']"));
+
+        public IWebElement GetCheckboxByName(string checkboxName) => driver.FindElement(By.XPath($"//div[@class='input-wrapper']//td[text()='{checkboxName}']/preceding-sibling::td//input[@type='checkbox']"));
+
+        #endregion
+
         #region Product
 
         public IWebElement GetProductsSection(string sectionName) => driver.FindElement(By.XPath($"//div[@class='box']//h3[text()='{sectionName}']/following-sibling::div"));
