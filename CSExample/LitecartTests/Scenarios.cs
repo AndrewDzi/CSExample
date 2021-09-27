@@ -22,6 +22,7 @@ namespace CSExample.LitecartTests
         public void start()
         {
             driver = new ChromeDriver();
+            //driver = new FirefoxDriver();
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
         }
 
@@ -168,32 +169,32 @@ namespace CSExample.LitecartTests
 
             var productName = "Yellow Duck";
             var expectedRegularPriceFontTextDecoration = "line-through";
-            var expectedDiscountPriceColor = "0, 0";
             var expectedDiscountPriceFontWeight = driver.GetType().Name.Equals("FirefoxDriver") ? "900" : "700";
             var product = GetProductFromContext(GetProductsSection("Campaigns"), productName);
             var actualProductRegularPrice = GetRegularProductPrice(product).Text;
             var actualProductDiscountPrice = GetDiscountProductPrice(product).Text;
 
             //  Check style
-            var expectedRegularPriceColor = "119, 119, 119";
-            if (!GetRegularProductPrice(product).GetCssValue("color").Contains(expectedRegularPriceColor))
-            {
-                throw new Exception("Color mismatch");
-            }
+            IsColorGray(ExtractRgbChannels(GetRegularProductPrice(product).GetCssValue("color"), driver.GetType().Name));
 
             if (!GetRegularProductPrice(product).GetCssValue("text-decoration").Contains(expectedRegularPriceFontTextDecoration))
             {
                 throw new Exception("Text decoration mismatch");
             }
 
-            if (!GetDiscountProductPrice(product).GetCssValue("color").Contains(expectedDiscountPriceColor))
-            {
-                throw new Exception("Color mismatch");
-            }
+            IsColorRed(ExtractRgbChannels(GetDiscountProductPrice(product).GetCssValue("color"), driver.GetType().Name));
 
             if (!GetDiscountProductPrice(product).GetCssValue("font-weight").Contains(expectedDiscountPriceFontWeight))
             {
                 throw new Exception("Font weight mismatch");
+            }
+
+            var regularPrice = double.Parse(GetRegularProductPrice(product).GetCssValue("font-size").Replace("px", string.Empty));
+            var discountPrice = double.Parse(GetDiscountProductPrice(product).GetCssValue("font-size").Replace("px", string.Empty));
+
+            if (discountPrice < regularPrice)
+            {
+                throw new Exception("Discount price is smaller that regular");
             }
 
             product.Click();
@@ -211,21 +212,14 @@ namespace CSExample.LitecartTests
             }
 
             //  Check style on details page
-            expectedRegularPriceColor = "102, 102, 102";
-            if (!GetRegularProductPrice(productOnDetailsPage).GetCssValue("color").Contains(expectedRegularPriceColor))
-            {
-                throw new Exception("Color mismatch");
-            }
+            IsColorGray(ExtractRgbChannels(GetRegularProductPrice(productOnDetailsPage).GetCssValue("color"), driver.GetType().Name));
 
             if (!GetRegularProductPrice(productOnDetailsPage).GetCssValue("text-decoration").Contains(expectedRegularPriceFontTextDecoration))
             {
                 throw new Exception("Text decoration mismatch");
             }
 
-            if (!GetDiscountProductPrice(productOnDetailsPage).GetCssValue("color").Contains(expectedDiscountPriceColor))
-            {
-                throw new Exception("Color mismatch");
-            }
+            IsColorRed(ExtractRgbChannels(GetDiscountProductPrice(productOnDetailsPage).GetCssValue("color"), driver.GetType().Name));
 
             if (driver.GetType().Name.Equals("FirefoxDriver"))
                 expectedDiscountPriceFontWeight = "700";
@@ -233,6 +227,14 @@ namespace CSExample.LitecartTests
             if (!GetDiscountProductPrice(productOnDetailsPage).GetCssValue("font-weight").Contains(expectedDiscountPriceFontWeight))
             {
                 throw new Exception("Font weight mismatch");
+            }
+
+            var regularPriceDetails = double.Parse(GetRegularProductPrice(productOnDetailsPage).GetCssValue("font-size").Replace("px", string.Empty));
+            var discountPriceDetails = double.Parse(GetDiscountProductPrice(productOnDetailsPage).GetCssValue("font-size").Replace("px", string.Empty));
+
+            if (discountPriceDetails < regularPriceDetails)
+            {
+                throw new Exception("Discount price is smaller that regular");
             }
         }
 
@@ -333,6 +335,42 @@ namespace CSExample.LitecartTests
         #endregion
 
         #region Helpers
+
+        public List<string> ExtractRgbChannels(string rawRgb, string driverName)
+        {
+            var rgbChannels = new List<string>();
+
+            if (driverName.Equals("FirefoxDriver"))
+            {
+                rgbChannels = rawRgb.Replace("rgb(", string.Empty).Replace(")", string.Empty).Replace(" ", string.Empty).Split(",".ToCharArray()).ToList();
+            }
+            else
+            {
+                rgbChannels = rawRgb.Replace("rgba(", string.Empty).Replace(")", string.Empty).Replace(" ", string.Empty).Split(",".ToCharArray()).ToList();
+                rgbChannels.RemoveAt(3);
+            }
+
+            return rgbChannels;
+        }
+
+        public void IsColorGray(List<string> rgbChannels)
+        {
+            foreach (var channel in rgbChannels)
+            {
+                if (!rgbChannels[0].Equals(channel))
+                {
+                    throw new Exception("It isn't gray color");
+                }
+            }
+        }
+
+        public void IsColorRed(List<string> rgbChannels)
+        {
+                if (!rgbChannels[1].Equals("0") && rgbChannels[2].Equals("0"))
+                {
+                    throw new Exception("It isn't red color");
+                }
+        }
 
         public void isArraysAreEqualySorted(string[] arrayToSort, string[] unsortedAray)
         {
