@@ -314,6 +314,49 @@ namespace CSExample.LitecartTests
             }
         }
 
+        [Test]
+        public void CheckIfUserCanAddProductToCart()
+        {
+            driver.Url = storeUrl;
+            var numberOfItems = 3;
+
+            var removeButton = By.XPath("//div[@id='checkout-cart-wrapper' and @style='opacity: 1;']//button[@name='remove_cart_item']");
+            var actualNumberOfItemsPath = By.XPath("//*[@id='box-checkout-summary']//tr//td[@class='sku']");
+
+            for (int i = 0; i < numberOfItems;)
+            {
+                GetProductsFromContext(GetProductsSection("Most Popular")).First().Click();
+
+                if (driver.FindElements(GetElementLocatorByTypeAndName("select", "options[Size]")).Any())
+                {
+                    new SelectElement(driver.FindElement(GetElementLocatorByTypeAndName("select", "options[Size]"))).SelectByText("Small");
+                }
+
+                driver.FindElement(GetElementLocatorByTypeAndName("button", "add_cart_product")).Click();
+                //productsInCartCounter++;
+                i++;
+                wait.Until(ExpectedConditions.ElementExists(By.XPath($"//*[@id='cart']//span[@class='quantity' and text()='{i}']")));
+                GetElementById("site-menu").FindElement(By.XPath("//i[@title='Home']")).Click();
+            }
+
+            GetLinkByName("Checkout »").Click();
+            driver.FindElement(By.XPath("//ul[@class='shortcuts']//a")).Click();
+
+            var actualNumberOfItems = driver.FindElements(actualNumberOfItemsPath).Count;
+
+            driver.FindElement(GetElementLocatorByTypeAndName("button", "remove_cart_item")).Click();
+
+            while (driver.FindElements(actualNumberOfItemsPath).Count > 0)
+            {
+                wait.Until(ExpectedConditions.ElementExists(removeButton));
+                
+                var btn =  driver.FindElement(removeButton);
+
+                btn.Click();
+                wait.Until(ExpectedConditions.StalenessOf(btn));
+            }
+        }
+
         #region Litecart Admin
 
         public IWebElement GetLitecartAdminMenuItem(string menuItemName) => driver.FindElement(By.XPath($"//ul[@id='box-apps-menu']//*[@id='app-']//span[@class='name' and text()='{menuItemName}']"));
@@ -326,8 +369,12 @@ namespace CSExample.LitecartTests
 
         public IWebElement GetProductsSection(string sectionName) => driver.FindElement(By.XPath($"//div[@class='box']//h3[text()='{sectionName}']/following-sibling::div"));
         public IWebElement GetProductFromContext(IWebElement context, string productName) => context.FindElement(By.XPath($".//li[contains(@class, 'product')]//div[@class='name' and text()='{productName}']//ancestor::li[contains(@class, 'product')]"));
+        public List<IWebElement> GetProductsFromContext(IWebElement context) => context.FindElements(By.XPath($".//li[contains(@class, 'product')]//div[@class='name' and text()]//ancestor::li[contains(@class, 'product')]")).ToList();
         public IWebElement GetRegularProductPrice(IWebElement ProductContext) => ProductContext.FindElement(By.XPath(".//*[@class='regular-price']"));
         public IWebElement GetDiscountProductPrice(IWebElement ProductContext) => ProductContext.FindElement(By.XPath(".//*[@class='campaign-price']"));
+
+
+
 
         // Product details page
         public IWebElement GetProductOnDetailsPage(string productName) => driver.FindElement(By.XPath($"//div[@id='box-product']//h1[text()='{productName}']//ancestor::div[@id='box-product']"));
@@ -366,10 +413,10 @@ namespace CSExample.LitecartTests
 
         public void IsColorRed(List<string> rgbChannels)
         {
-                if (!rgbChannels[1].Equals("0") && rgbChannels[2].Equals("0"))
-                {
-                    throw new Exception("It isn't red color");
-                }
+            if (!rgbChannels[1].Equals("0") && rgbChannels[2].Equals("0"))
+            {
+                throw new Exception("It isn't red color");
+            }
         }
 
         public void isArraysAreEqualySorted(string[] arrayToSort, string[] unsortedAray)
@@ -398,9 +445,9 @@ namespace CSExample.LitecartTests
         }
 
         // Element types are: input, button.  
-        public By GetElementLocatorByTypeAndName(string elementType, string buttonName)
+        public By GetElementLocatorByTypeAndName(string elementType, string elementName)
         {
-            return By.XPath($".//{elementType}[@name='{buttonName}']");
+            return By.XPath($".//{elementType}[@name='{elementName}']");
         }
 
 
