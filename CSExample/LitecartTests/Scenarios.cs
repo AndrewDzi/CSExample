@@ -6,6 +6,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CSExample.LitecartTests
 {
@@ -357,6 +358,21 @@ namespace CSExample.LitecartTests
             }
         }
 
+        [Test]
+        public void CheckIfLinksOpensInNewWindow()
+        {
+            LoginToLitecart();
+            driver.Url = $"{adminUrl}?app=countries&doc=countries";
+            driver.FindElement(By.XPath("//*[@class='button' and  contains(text(),' Add New Country')]")).Click();
+
+            OpenInNewWindowAndBack("Code");
+            OpenInNewWindowAndBack("Tax ID Format");
+            OpenInNewWindowAndBack("Address Format");
+            OpenInNewWindowAndBack("Postcode Format");
+            OpenInNewWindowAndBack("Currency Code");
+            OpenInNewWindowAndBack("Phone Country Code");
+        }
+
         #region Litecart Admin
 
         public IWebElement GetLitecartAdminMenuItem(string menuItemName) => driver.FindElement(By.XPath($"//ul[@id='box-apps-menu']//*[@id='app-']//span[@class='name' and text()='{menuItemName}']"));
@@ -382,6 +398,25 @@ namespace CSExample.LitecartTests
         #endregion
 
         #region Helpers
+
+        public string GetJustOpenedWindow(ICollection<string> oldWindows, int attempts)
+        {
+            ICollection<string> currentWindows;
+
+            for (int i = 0; i < attempts; i++)
+            {
+                currentWindows = driver.WindowHandles;
+
+                if (currentWindows.Count > oldWindows.Count)
+                {
+                    return currentWindows.Except(oldWindows).First();
+                }
+
+                Thread.Sleep(500);
+            }
+
+            throw new Exception("New window wasn't opened");
+;       }
 
         public List<string> ExtractRgbChannels(string rawRgb, string driverName)
         {
@@ -434,6 +469,11 @@ namespace CSExample.LitecartTests
             return driver.FindElement(By.XPath($"//*[@id='{id}']"));
         }
 
+        public IWebElement GetExternalLinkInCointries(string name)
+        {
+            return driver.FindElement(By.XPath($"//strong[text()='{name}']//following-sibling::a[@target]"));
+        }
+
         public IWebElement GetLinkByName(string name)
         {
             return driver.FindElement(By.XPath($"//a[@href and text()='{name}']"));
@@ -470,6 +510,18 @@ namespace CSExample.LitecartTests
         }
 
         #endregion
+
+        public void OpenInNewWindowAndBack(string linkName)
+        {
+            string mainWindow = driver.CurrentWindowHandle;
+            var oldWindows = driver.WindowHandles;
+
+            GetExternalLinkInCointries(linkName).Click();
+
+            driver.SwitchTo().Window(GetJustOpenedWindow(oldWindows, 10));
+            driver.Close();
+            driver.SwitchTo().Window(mainWindow);
+        }
 
         [TearDown]
         public void stop()
