@@ -365,12 +365,12 @@ namespace CSExample.LitecartTests
             driver.Url = $"{adminUrl}?app=countries&doc=countries";
             driver.FindElement(By.XPath("//*[@class='button' and  contains(text(),' Add New Country')]")).Click();
 
-            OpenInNewWindowAndBack("Code");
-            OpenInNewWindowAndBack("Tax ID Format");
-            OpenInNewWindowAndBack("Address Format");
-            OpenInNewWindowAndBack("Postcode Format");
-            OpenInNewWindowAndBack("Currency Code");
-            OpenInNewWindowAndBack("Phone Country Code");
+            var links = GetExternalLinksInCointries();
+
+            foreach (var link in links)
+            {
+                OpenInNewWindowAndBack(link);
+            }   
         }
 
         #region Litecart Admin
@@ -469,9 +469,9 @@ namespace CSExample.LitecartTests
             return driver.FindElement(By.XPath($"//*[@id='{id}']"));
         }
 
-        public IWebElement GetExternalLinkInCointries(string name)
+        public List<IWebElement> GetExternalLinksInCointries()
         {
-            return driver.FindElement(By.XPath($"//strong[text()='{name}']//following-sibling::a[@target]"));
+            return driver.FindElements(By.XPath($"//strong[text()]//following-sibling::a[@target]")).ToList();
         }
 
         public IWebElement GetLinkByName(string name)
@@ -511,12 +511,12 @@ namespace CSExample.LitecartTests
 
         #endregion
 
-        public void OpenInNewWindowAndBack(string linkName)
+        public void OpenInNewWindowAndBack(IWebElement link)
         {
             string mainWindow = driver.CurrentWindowHandle;
             var oldWindows = driver.WindowHandles;
 
-            GetExternalLinkInCointries(linkName).Click();
+            link.Click();
 
             driver.SwitchTo().Window(GetJustOpenedWindow(oldWindows, 10));
             driver.Close();
