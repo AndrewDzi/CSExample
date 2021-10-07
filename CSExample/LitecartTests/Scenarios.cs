@@ -22,7 +22,7 @@ namespace CSExample.LitecartTests
         [SetUp]
         public void start()
         {
-            driver = new ChromeDriver();
+            driver = new ChromeDriver(options);
             //driver = new FirefoxDriver();
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
         }
@@ -371,6 +371,45 @@ namespace CSExample.LitecartTests
             {
                 OpenInNewWindowAndBack(link);
             }   
+        }
+
+        [Test]
+        public void CheckThatNoErrorMessagesInBrowserLog()
+        {
+            LoginToLitecart();
+
+            driver.Url = $"{adminUrl}?app=catalog&doc=catalog&category_id=1";
+
+            var products = driver.FindElements(By.XPath("//td[@id='content']//table//tr[@class='row']//img//following-sibling::a"));
+
+            CheckConsoleErrors(driver);
+
+            foreach (var product in products)
+            {
+                product.Click();
+                wait.Until(ExpectedConditions.ElementExists(By.XPath($"//button[@name='cancel']")));
+
+                foreach (LogEntry l in driver.Manage().Logs.GetLog("browser"))
+                {
+                    CheckConsoleErrors(driver);
+                } 
+            }
+        }
+
+        public void CheckConsoleErrors(IWebDriver driver)
+        {
+            var errorsList = new List<LogEntry>();
+
+            foreach (var entry in driver.Manage().Logs.GetLog(LogType.Browser))
+            {
+                if (entry.Level == LogLevel.All)
+                    errorsList.Add(entry);
+            }
+
+            if (!errorsList.Count.Equals(0))
+            {
+                throw new Exception("Some messages in browser the console");
+            }
         }
 
         #region Litecart Admin
