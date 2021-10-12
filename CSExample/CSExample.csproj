@@ -62,6 +62,13 @@
   <ItemGroup>
     <Compile Include="LitecartTests\Scenarios.cs" />
     <Compile Include="MyFirstTest.cs" />
+    <Compile Include="PageObjectsPattern\Application\LiteCartApp.cs" />
+    <Compile Include="PageObjectsPattern\Pages\CartPage.cs" />
+    <Compile Include="PageObjectsPattern\Pages\HomePage.cs" />
+    <Compile Include="PageObjectsPattern\Pages\Page.cs" />
+    <Compile Include="PageObjectsPattern\Pages\ProductDetailsPage.cs" />
+    <Compile Include="PageObjectsPattern\Tests\CartTests.cs" />
+    <Compile Include="PageObjectsPattern\Tests\TestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +76,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\dust.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="PageObjectsPattern\Models\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -22,7 +22,7 @@ namespace CSExample.LitecartTests
         [SetUp]
         public void start()
         {
-            driver = new ChromeDriver(options);
+            driver = new ChromeDriver();
             //driver = new FirefoxDriver();
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5));
         }
@@ -319,6 +319,7 @@ namespace CSExample.LitecartTests
         public void CheckIfUserCanAddProductToCart()
         {
             driver.Url = storeUrl;
+     
             var numberOfItems = 3;
 
             var removeButton = By.XPath("//div[@id='checkout-cart-wrapper' and @style='opacity: 1;']//button[@name='remove_cart_item']");
@@ -334,16 +335,20 @@ namespace CSExample.LitecartTests
                 }
 
                 driver.FindElement(GetElementLocatorByTypeAndName("button", "add_cart_product")).Click();
-                //productsInCartCounter++;
+
                 i++;
                 wait.Until(ExpectedConditions.ElementExists(By.XPath($"//*[@id='cart']//span[@class='quantity' and text()='{i}']")));
                 GetElementById("site-menu").FindElement(By.XPath("//i[@title='Home']")).Click();
             }
 
             GetLinkByName("Checkout »").Click();
+
+
+
+
             driver.FindElement(By.XPath("//ul[@class='shortcuts']//a")).Click();
 
-            var actualNumberOfItems = driver.FindElements(actualNumberOfItemsPath).Count;
+            //var actualNumberOfItems = driver.FindElements(actualNumberOfItemsPath).Count;
 
             driver.FindElement(GetElementLocatorByTypeAndName("button", "remove_cart_item")).Click();
 
